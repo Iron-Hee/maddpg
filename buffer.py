@@ -131,7 +131,6 @@ class PERMA:
         self.mem_cntr += 1
 
         self.priorities[index] = max(self.priorities[:max_mem], default=1.0)
-        
         reward = reward.sum()
         if reward < self.min_reward:
             self.min_reward = reward
@@ -175,6 +174,6 @@ class PERMA:
             terminal
 
     def ready(self):
-        print('memory:', self.mem_cntr, '/', self.batch_size, '/', self.mem_size)
+        # print('memory:', self.mem_cntr, '/', self.batch_size, '/', self.mem_size)
         if self.mem_cntr >= self.batch_size:
             return True
