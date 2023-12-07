@@ -7,9 +7,9 @@ import gc
 
 
 class Main:
-    PRINT_INTERVAL = 10
+    PRINT_INTERVAL = 20
     N_GAMES = 50000
-    MAX_STEPS = 500
+    MAX_STEPS = 750
     
     def __init__(self):
         self.env = None # need to be set by GUI
@@ -77,9 +77,10 @@ class Main:
             while not any(done):
                 """ step loop """
                 
-                actions = self.maddpg_agents.choose_action(obs, noise=None if self.evaluate else 0.2)
+                actions = self.maddpg_agents.choose_action(obs, noise=0.2)
+                if self.evaluate:
+                    print(actions)
                 obs_, reward, done, info = self.env.step(actions)
-
                 if all(done):
                     self.fastest_solve = min(self.fastest_solve, episode_step + 1)
 

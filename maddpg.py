@@ -7,7 +7,7 @@ from environment import Observation
 class MADDPG:
     def __init__(self, n_agents, n_actions, input_dim=(10, 10), 
                  conv1_channel=16, conv2_channel=32, fc1_dims=32, fc2_dims=64,
-                 scenario='simple', alpha=0.05, beta=0.02,
+                 scenario='simple', alpha=0.0001, beta=0.001, # 원래 alpha beta 0.05 0.02 였음
                  gamma=0.99, tau=0.05, chkpt_dir='tmp/maddpg/'):
         self.agents = []
         self.n_agents = n_agents
@@ -37,6 +37,7 @@ class MADDPG:
                 agent_obs.obstacle, agent_obs.self_,
                 agent_obs.other, agent_obs.dirty, noise=noise
             )
+            # print(f"agent idx {agent_idx} : {action}")
             actions[agent_idx] = action
             
         threads = []
@@ -109,7 +110,7 @@ class MADDPG:
         all_agents_new_mu_actions = [all_agents_new_mu_actions[i] for i in range(self.n_agents)]
         old_agents_actions = [old_agents_actions[i] for i in range(self.n_agents)]
 
-        new_actions = T.cat([acts for acts in all_agents_new_actions], dim=1)
+        new_actions = T.cat([acts for acts in all_agents_new_actions], dim=1) #(2048, 15)
         mu = T.cat([acts for acts in all_agents_new_mu_actions], dim=1).clone().detach()
         old_actions = T.cat([acts for acts in old_agents_actions],dim=1)
 

@@ -41,7 +41,8 @@ class Agent:
         if noise is not None:
             noise = (T.rand(self.n_actions) * noise).to(device)
             action = actions + noise
-
+        else:
+            action = actions
         return action.detach().cpu().numpy()[0]
 
     def update_network_parameters(self, tau=None):
@@ -57,7 +58,7 @@ class Agent:
             actor_state_dict[name] = tau*actor_state_dict[name].clone() + \
                     (1-tau)*target_actor_state_dict[name].clone()
 
-        self.target_actor.load_state_dict(actor_state_dict)
+        self.target_actor.load_state_dict(actor_state_dict, strict=False)
 
         target_critic_params = self.target_critic.named_parameters()
         critic_params = self.critic.named_parameters()

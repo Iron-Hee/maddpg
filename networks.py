@@ -55,12 +55,16 @@ class ActorNetwork(nn.Module):
         self.chkpt_file = os.path.join(chkpt_dir, name)
         os.makedirs(os.path.dirname(self.chkpt_file), exist_ok=True)
 
-        self.conv1 = nn.Conv2d(4, conv1_channel, 3)    # [3, H, W] -> [32, H-2, W-2]
-        self.conv2 = nn.Conv2d(conv1_channel, conv2_channel, 3)   # [32, H-2, W-2] -> [64, H-4, W-4]
-        self.fc1 = nn.Linear(conv2_channel*(input_dim[0]-4)*(input_dim[1]-4), 
-                             fc1_dims)
+        self.conv1 = nn.Conv2d(4, conv1_channel, 3)    # [3, H, W] -> [16, H-2, W-2]
+        self.bn1 = nn.BatchNorm2d(conv1_channel)
+        self.conv2 = nn.Conv2d(conv1_channel, conv2_channel, 3)   # [16, H-2, W-2] -> [32, H-4, W-4]
+        self.bn2 = nn.BatchNorm2d(conv2_channel)
+        self.fc1 = nn.Linear(conv2_channel*(input_dim[0]-4)*(input_dim[1]-4), fc1_dims)
         self.fc2 = nn.Linear(fc1_dims, fc2_dims)
         self.pi = nn.Linear(fc2_dims, n_actions)
+        # self.pi = nn.Linear(conv2_channel*(input_dim[0]-4)*(input_dim[1]-4), n_actions)
+        
+        self.dropout = nn.Dropout(p=0.5)
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -68,11 +72,12 @@ class ActorNetwork(nn.Module):
 
     def forward(self, obstacle, self_, other, dirty):
         state1 = T.stack([obstacle, self_, other, dirty], dim=1)
-        x = F.relu(self.conv1(state1))
-        x = F.relu(self.conv2(x))
+        x = F.relu(self.bn1(self.conv1(state1)))
+        x = F.relu(self.bn2(self.conv2(x)))
         x = x.flatten(start_dim=1)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
+        # x = self.dropout(x)
         pi = T.softmax(self.pi(x), dim=1)
         # print(pi)
         return pi

@@ -42,6 +42,9 @@ class MAACEnv:
                 self.agent_pos = list(map(tuple, indices[np.random.choice(
                     len(indices), self.n_agent, replace=False)]))
 
+        self.rd = 0.1      # reward decay  reward *= rd
+        self.min_reward = self.rd**3
+        
         self.reset()
         self.dirty_layer[self.dirty_layer == self.obstacle_layer] = 0
         
@@ -57,6 +60,7 @@ class MAACEnv:
             self.agents = {}
         self.agent_layer = -np.ones((self.n_row, self.n_col))
         self.dirty_layer = np.zeros((self.n_row, self.n_col))
+        self.reward_layer = np.zeros((self.n_row, self.n_col))
         self.visited_layer = -np.ones((self.n_row, self.n_col))
         
         self.steps = 0
@@ -73,6 +77,7 @@ class MAACEnv:
         for pos in self.dirty_pos:
             if pos not in self.obstacle_pos:
                 self.dirty_layer[pos[0], pos[1]] = 1
+                self.reward_layer[pos[0], pos[1]] = 1
 
         # 환경 처음 만들 때만 obstacle_layer 초기화
         if not hasattr(self, 'obstacle_layer'):
@@ -129,8 +134,10 @@ class MAACEnv:
             
             if self.dirty_layer[agent['new_pos']] == 1: # 도착한 곳이 더러운 곳이라면 reward +1
                 self.dirty_layer[agent['new_pos']] = 0 # 도착한 곳은 청소 됨
-                rewards[i] +=1 # 청소 했으니까 +1
-          
+                rewards[i] += self.reward_layer[agent['new_pos']] # 청소 했으니까 보상 받는데 그 칸이 방문된 만큼 감쇄된 보상을 받음
+                self.reward_layer[agent['new_pos']] = round(self.reward_layer[agent['new_pos']]*self.rd, 2) if self.reward_layer[agent['new_pos']] > self.min_reward else 0
+                # rewards[i] += 1
+                
                 if 'covered' not in agent:
                     agent['covered'] = 1
                 else:
