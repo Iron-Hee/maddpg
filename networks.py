@@ -21,8 +21,14 @@ class CriticNetwork(nn.Module):
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
 
-    def forward(self, state, action):
-        x = F.relu(self.fc1(T.cat([state, action], dim=1)))
+    def forward(self, obstacle, self_, other, dirty, action):
+        state1 = T.stack([obstacle, self_, other, dirty], dim=1)
+        x = F.relu(self.conv1(state1))
+        x = F.relu(self.conv2(x))
+        x = x.flatten(start_dim=1)
+        
+        state2 = action.flatten(start_dim=1)
+        x = F.relu(self.fc1(T.cat([x, state2], dim=1)))
         x = F.relu(self.fc2(x))
         q = self.q(x)
 
@@ -51,8 +57,12 @@ class ActorNetwork(nn.Module):
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
 
-    def forward(self, state):
-        x = F.relu(self.fc1(state))
+    def forward(self, obstacle, self_, other, dirty):
+        state1 = T.stack([obstacle, self_, other, dirty], dim=1)
+        x = F.relu(self.conv1(state1))
+        x = F.relu(self.conv2(x))
+        x = x.flatten(start_dim=1)
+        x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         pi = T.softmax(self.pi(x), dim=1)
 

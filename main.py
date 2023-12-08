@@ -14,7 +14,7 @@ def obs_list_to_state_vector(observation):
 
 
 class Main:
-    PRINT_INTERVAL = 100
+    PRINT_INTERVAL = 50
     N_GAMES = 50000
     MAX_STEPS = 2000
     
@@ -28,10 +28,15 @@ class Main:
         self.load_chkpt = True
         self.force_render = False
         
+        self.step_per_learn = 50 # learn 1 batch per 50 steps
+        self.episode_per_gc = 10 # collect garbage per 100 episodes
+        self.local_dim = (5, 5)
+        
         # subroutine control (GUI is main thread)
         self.force_stop = False
         self.game_progress = 0
         self.game_render_period = 100 # render 1 whole game per 100 games
+        self.episode_per_render = 10 # render 1 whole game per 100 games
         
     def prepare(self):
         scenario = '{}_agent_{}_by_{}'.format(self.env.n_agent, self.env.n_row, self.env.n_col)
